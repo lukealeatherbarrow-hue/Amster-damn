@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Amsterdam Day 2</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #FAFAF7; -webkit-font-smoothing: antialiased; }
+  button { -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const { useState } = React;
+
+/* ── DATA ── */
+const BK=[
+  {id:"niemeijer",n:"Gebroeders Niemeijer",v:"Best croissants in Amsterdam",d:"Kiazim says these are some of the best croissants she's had — super crisp and buttery. On Nieuwendijk, south from Centraal. Perfect grab-and-go before the ferry or NEMO.",addr:"Nieuwendijk 35",near:"Centraal → Noord / NEMO",p:"€5–10",ord:"A croissant. Maybe two.",src:"Kiazim/Guardian",veg:1,lat:52.3771,lng:4.8953},
+  {id:"box",n:"Box Sociaal",v:"Antipodean brunch, Fort Negen sourdough",d:"Kiazim's brunch pick. Flat whites, good eggs, sourdough from Fort Negen bakery. In Plantage — quiet leafy area near the zoo. The move if heading east.",addr:"Plantage Middenlaan 30A",near:"Oost / Tropenmuseum",p:"€12–18",ord:"Anything on sourdough.",src:"Kiazim/Guardian",veg:1,lat:52.365,lng:4.913},
+  {id:"ct",n:"CT Coffee & Coconuts",v:"Brunch inside a 1920s cinema",d:"Three-storey converted movie theatre — soaring ceilings, palms, balcony seating. Stunning space. Good bowls, eggs, pastries. De Pijp, walkable from hotel. Best rainy option.",addr:"Ceintuurbaan 282",near:"Hotel (walk)",p:"€12–18",ord:"Sit on the balcony.",src:"Local",veg:1,lat:52.353,lng:4.893},
+  {id:"bakers",n:"Bakers & Roasters",v:"Brazilian-Kiwi, absurd portions",d:"Cult De Pijp brunch. Huevos rancheros, banana pancakes, loaded bowls. Wednesday should be queue-free.",addr:"Eerste Jacob van Campenstraat 54",near:"Hotel (walk)",p:"€14–20",ord:"Huevos rancheros.",src:"Local",veg:1,lat:52.354,lng:4.89},
+  {id:"lc",n:"Little Collins",v:"Melbourne-inspired, walk-ins only",d:"Time Out pick. Kimchi & gruyère scramble, hash browns, bircher muesli. Named after Melbourne's famous street. Come early — walk-ins only, no reservations. De Pijp.",addr:"Eerste Sweelinckstraat 19F",near:"Hotel (walk)",p:"€12–18",ord:"Kimchi scramble.",src:"Time Out",veg:1,lat:52.352,lng:4.895},
+  {id:"dignita",n:"Dignita Hoftuin",v:"Hidden garden behind the museum",d:"In the Hoftuin gardens behind H'ART Museum. Peaceful, slightly hidden, lovely. Good veg. Near Amstel — works for heading to Oost or NEMO.",addr:"Nieuwe Herengracht 18A",near:"Amstel → Oost or NEMO",p:"€12–18",ord:"Whatever's seasonal.",src:"Time Out",veg:1,lat:52.366,lng:4.905},
+];
+
+const ZONES=[
+  {id:"noord",n:"The Noord Trip",em:"⛴",t:"~3 hrs",c1:"#E8512F",c2:"#FFF0EB",
+    hl:"Ferry to the industrial north — street art in a giant warehouse",
+    desc:"Former shipyards turned creative hub. STRAAT Museum (150+ street art works) is the anchor — entirely indoors, ideal for rain. Then wander NDSM wharf, eat pizza from a garage, coffee in shipping containers. Harriet & Parri described it as 'very Hackney Wick.'",
+    how:"Tram 2/12 → Centraal (15 min) → walk through station → free ferry F3 to NDSM (15 min, every 15 min). No ticket.",
+    back:"Ferry ~2:30 → Centraal 2:45 → Café Rest. Amsterdam lunch (10 min walk from Centraal) → hotel 3:50",
+    best:"Completely different from yesterday",
+    stops:[
+      {n:"STRAAT Museum",t:"do",d:"150+ street art works in a cavernous NDSM warehouse. Monumental scale. Entirely indoors. 10am–5pm Wed.",p:"€18.50",time:"1–1.5h",link:"https://straatmuseum.com",lat:52.4012,lng:4.8935},
+      {n:"NDSM Wharf",t:"walk",d:"Old cranes, container studios, murals everywhere. Free. 20–40 min if dry.",p:"Free",lat:52.4015,lng:4.893},
+      {n:"Pllek",t:"eat",d:"Container café, IJ views. Good coffee, toasties, juices. 🌱 Veg-friendly. Open from 9:30am.",p:"€5–12",ord:"Coffee + tosti.",veg:1,lat:52.3998,lng:4.891},
+      {n:"Euro Pizza",t:"eat",d:"Wood-fired sourdough pizza in a former garage. Locals-heavy. Also small plates + natural wine. 🌱 Veggie pizzas. ⚠️ Check Wed hours.",p:"€12–16",ord:"Margherita to share.",src:"CN Traveller",veg:1,lat:52.3945,lng:4.902},
+      {n:"Café Modern",t:"eat",d:"Noord pioneer since 2011. Surprise seasonal tasting menu — no menu, you eat what they cook. 🌱 They adapt for vegetarians. ⚠️ Check Wed lunch availability.",p:"€40–55pp",ord:"The surprise menu.",veg:1,lat:52.392,lng:4.905},
+      {n:"Rookt Amsterdam",t:"eat",d:"Chef Niels smokes his own charcuterie, mackerel, seaweed. Genuinely unusual. Kiazim/Guardian pick.",p:"€10–18",ord:"Smoked whatever-he's-got.",src:"Kiazim",lat:52.393,lng:4.91},
+      {n:"Coba tacos",t:"eat",d:"Kiazim's pick for best tacos. Al pastor, creative specials. ⛔ Thu–Sun only — likely CLOSED Wednesday.",p:"€12–20",src:"Kiazim",closed:1},
+      {n:"Van Dijk & Ko",t:"shop",d:"Vintage homeware + Dutch crockery near NDSM. Industrial furniture, ceramics, glassware. Worth browsing if you're already in Noord.",p:"Free to browse",lat:52.401,lng:4.894},
+    ]
+  },
+  {id:"nemo",n:"NEMO & Waterfront",em:"🔬",t:"~2–3 hrs",c1:"#1D6FE0",c2:"#EBF3FF",
+    hl:"Science museum, maritime history & the Marineterrein",
+    desc:"NEMO: giant green copper ship, 5 floors of interactive science + tech. Free panoramic rooftop. Marineterrein (former naval base) nearby with Scheepskameel. Maritime Museum next door. Most compact option — all walkable from Centraal. Pop Trading is en route.",
+    how:"Tram 2/12 → Centraal (15 min) → 10 min walk east along waterfront",
+    back:"Near Centraal already. Leave lunch 3:15 → hotel 3:45.",
+    best:"Culture without a big expedition. Best for rain.",
+    stops:[
+      {n:"NEMO Science Museum",t:"do",d:"Renzo Piano building. Five interactive floors — science, tech, cosmos. Rooftop free to access (separate east entrance). 10am–5:30pm. Great for rain.",p:"€17.50",time:"1.5–2h",link:"https://www.nemosciencemuseum.nl",lat:52.3741,lng:4.9123},
+      {n:"Het Scheepvaartmuseum",t:"do",d:"Maritime Museum — 17th-century naval storehouse. Golden Age, VOC. Full-size replica ship to board. 10am–5pm. Also: new Ekō exhibition on Japan through photography (just opened Mar 5).",p:"€17.50",time:"1.5–2h",lat:52.3718,lng:4.9153},
+      {n:"Marineterrein",t:"walk",d:"Former naval base, now public. Creative spaces, green areas. Scheepskameel is here. Nice between museums.",p:"Free",lat:52.373,lng:4.914},
+      {n:"NEMO Rooftop",t:"eat",d:"Stepped terrace, free access (east entrance). Best views in Amsterdam. Small café. Even in rain.",p:"Free",ord:"Just the view.",veg:1,lat:52.3742,lng:4.9125},
+      {n:"Scheepskameel",t:"eat",d:"Kiazim favourite. High ceilings, white walls, St John vibes. Seasonal set menu, German wines. 🌱 Good veg options. Works as full lunch or bar snacks.",p:"€15–35",ord:"Set menu or bar snacks + wine.",src:"Kiazim/Guardian",veg:1,lat:52.3728,lng:4.9145},
+      {n:"Gebr Hartering",t:"eat",d:"Classic cooking, Klaas (Kiazim's fave waiter). Peperstraat, 10 min from NEMO through old town.",p:"€20–35",ord:"Whatever Klaas suggests.",src:"Kiazim",lat:52.373,lng:4.906},
+      {n:"Pop Trading Co.",t:"shop",d:"Sint Annendwarsstraat 3a — en route from Centraal to NEMO. Streetwear + skate. 12–6pm daily.",addr:"Sint Annendwarsstraat 3a",lat:52.374,lng:4.899},
+    ]
+  },
+  {id:"oost",n:"The East Side",em:"🌍",t:"~3–4 hrs",c1:"#1B7A4A",c2:"#ECF7F0",
+    hl:"World cultures museum, windmill brewery & neighbourhood life",
+    desc:"Multicultural Oost. Tropenmuseum (world cultures, stunning building) → walk to Brouwerij 't IJ (brewery under a windmill, 10/10 per Harriet & Parri). ⚠️ Brewery opens 2pm weekdays. BAK nearby for veg-forward lunch. Note: Rijsel is dinner-only — skip it for tomorrow.",
+    how:"Tram 14 from Museumplein → Alexanderplein (15 min)",
+    back:"Leave brewery ~3pm → tram 14 → hotel 3:30.",
+    best:"Depth. Proper museum, proper neighbourhood, proper lunch.",
+    stops:[
+      {n:"Tropenmuseum",t:"do",d:"World cultures — Asia, Africa, Middle East, Latin America. Grand building, soaring atrium. Much quieter than Rijksmuseum. 10am–5pm. 🌱 Café inside.",p:"€16",time:"1.5–2h",link:"https://www.tropenmuseum.nl",veg:1,lat:52.3627,lng:4.9224},
+      {n:"Dappermarkt",t:"walk",d:"Daily market (Mon–Sat 9–5). Surinamese snacks, kibbeling, fabrics. Much more local than Albert Cuyp. Near Tropenmuseum. 🌱 Lots of veggie snack stalls.",p:"Free",veg:1,lat:52.362,lng:4.926},
+      {n:"Brouwerij 't IJ",t:"eat",d:"Brewery under De Gooyer windmill. Both Harriet & Parri rated 10/10. ⚠️ Opens 2pm weekdays. Plan around this. Tasting flights + cheese boards. 🌱 Cheese board veggie.",p:"€5–15",ord:"Tasting flight + cheese board.",src:"Harriet & Parri",veg:1,lat:52.3664,lng:4.9264},
+      {n:"BAK",t:"eat",d:"Originally fully vegetarian, now includes some fish/meat but 🌱 veg is still the star. Beautiful waterfront space near windmill. Set lunch great value. THE vegetarian option.",p:"€25–35 set",ord:"The set lunch.",src:"CN Traveller",veg:1,lat:52.366,lng:4.927},
+      {n:"Kop van Oost",t:"eat",d:"Seasonal Dutch cooking on the waterfront overlooking the windmill. Great lunch spot. 🌱 Good veg options.",p:"€18–30",ord:"Whatever's seasonal.",veg:1,lat:52.3662,lng:4.926},
+      {n:"Oosterpark",t:"walk",d:"Leafy park next to Tropenmuseum. Post-museum stroll if rain holds.",p:"Free",lat:52.3607,lng:4.92},
+      {n:"⚠️ Rijsel",t:"info",d:"DINNER ONLY 6–10pm Mon–Fri. Cannot do lunch. Flagging in case you were planning around it — you'd need to come back tonight which doesn't work with your train.",closed:1},
+    ]
+  },
+  {id:"pijp",n:"De Pijp",em:"🛒",t:"~2–3 hrs",c1:"#8B5CF6",c2:"#F5F0FF",
+    hl:"Amsterdam's biggest market, Surinamese food & neighbourhood streets",
+    desc:"144 nationalities. Albert Cuyp Market (260 stalls, great for grazing). Surinamese restaurants Dimitri rates highly. Closest to your hotel — good for a morning into lazy afternoon. Penny Lane Vintage and Lucille vintage are both here too.",
+    how:"Tram 24 (10 min). Or walk 15–20 min from hotel.",
+    back:"Walk or tram. 10–15 min. Easiest zone.",
+    best:"Low-key grazing. A neighbourhood, not a destination.",
+    stops:[
+      {n:"Albert Cuyp Market",t:"do",d:"Amsterdam's biggest outdoor market since 1905. ~260 stalls. Fresh stroopwafels, kibbeling, herring, poffertjes, cheese, Surinamese snacks. Mon–Sat 9–5. 🌱 Loads of veggie snacks.",p:"Free",time:"1–1.5h",veg:1,lat:52.3555,lng:4.8919},
+      {n:"Warung Spang Makandra",t:"eat",d:"Javanese-Surinamese since 1978. Nasi rames, roti, baka bana. Dimitri rec. 🌱 Ask about sayur lodeh (veg curry) or veg roti.",p:"€12–18",ord:"Nasi rames or roti.",src:"Dimitri",veg:1,lat:52.3545,lng:4.895},
+      {n:"New Fusion",t:"eat",d:"Chinese-Surinamese. Fried rice moksi with roast meats. Also roti with lamb curry. Dimitri pick. Hearty. Limited veg.",p:"€12–18",ord:"Fried rice moksi.",src:"Dimitri",lat:52.3548,lng:4.8945},
+      {n:"Roopram Roti",t:"eat",d:"Surinamese roti & curry. Hearty, generous, cheap. 🌱 Potato + chickpea roti.",p:"€8–14",ord:"A roti.",src:"Dimitri",veg:1,lat:52.356,lng:4.894},
+      {n:"Poffertjes (market)",t:"eat",d:"Tiny Dutch pancakes, fluffy, powdered sugar + butter. Made on cast-iron pans at market stalls. 🌱",p:"€4–6",ord:"A plate. Extra butter.",veg:1},
+      {n:"Kibbeling (fish stalls)",t:"eat",d:"Battered fried cod chunks with garlic mayo. Classic Dutch from the market fish stalls.",p:"€5–7",ord:"Portion with garlic mayo."},
+      {n:"Penny Lane Vintage",t:"shop",d:"Classic cuts — Audrey Hepburn, Bardot, Paul Newman era. M+W. In De Pijp on Eerste van der Helststraat.",addr:"Eerste van der Helststraat 11A",lat:52.3545,lng:4.893},
+      {n:"Lucille",t:"shop",d:"Women's vintage + homeware. American expat-owned. Contemporary vintage fashion, accessories, beauty products. Van Woustraat.",addr:"Van Woustraat 52H",lat:52.355,lng:4.895},
+    ]
+  },
+  {id:"nine",n:"Nine Streets & Canal Ring",em:"🎨",t:"~2–3 hrs",c1:"#B45309",c2:"#FFF8EB",
+    hl:"Galleries, boutiques & the best photography museum in Europe",
+    desc:"The Nine Streets (De Negen Straatjes) are a grid of small cross-streets linking the main canals. Full of independent boutiques, vintage shops, and galleries. FOAM photography museum is here (two brand-new exhibitions opened Mar 6). This zone is directly between your hotel and Centraal — you'll pass through it whatever you do. Could be a standalone morning or a stop en route.",
+    how:"Walk north from hotel through Leidseplein (20 min). Or tram 2 to Spui.",
+    back:"You're in the centre. Walk or tram anywhere. 15 min to hotel, 15 to Centraal.",
+    best:"Shopping + gallery. Or a stop between your hotel and another zone.",
+    stops:[
+      {n:"FOAM Photography Museum",t:"do",d:"Photography in a canal house. Two brand-new exhibitions (opened Mar 6): Verena Blok's 'Love Shit' (reproduction + bodily autonomy) and Julia Kochetova's 'War is Personal' (Ukraine). 10am–6pm Wed. Keizersgracht 609. 🌱 Good café. One of the best small museums in Europe.",p:"€16",time:"1–1.5h",link:"https://www.foam.org",veg:1,lat:52.3628,lng:4.8916},
+      {n:"Stedelijk Museum",t:"do",d:"Amsterdam's modern/contemporary art museum. Currently showing Danh Vo solo (until Aug 2026). On Museumplein — right by your hotel. 10am–6pm. Good if you want something close before heading out.",p:"€22.50",time:"1–2h",link:"https://www.stedelijk.nl",lat:52.358,lng:4.88},
+      {n:"American Vintage",t:"shop",d:"Women's: Hartenstraat 20A. Men's: Hartenstraat 33. Also at Van Baerlestraat 18 (next to hotel!). 10am–6pm Wed.",addr:"Hartenstraat 20A + 33",lat:52.373,lng:4.884},
+      {n:"American Vintage (Museum Quarter)",t:"shop",d:"Van Baerlestraat 18 — right by your hotel. Can pop in before heading out.",addr:"Van Baerlestraat 18",lat:52.358,lng:4.878},
+      {n:"Tenue de Nîmes",t:"shop",d:"Denim specialist. APC, Agolde, Haikure. Quality pieces that age well. In Jordaan near Nine Streets.",addr:"Elandsgracht 60",lat:52.369,lng:4.882},
+      {n:"Episode",t:"shop",d:"Affordable vintage. M+W. Berenstraat 1 in Nine Streets. Sprawling rails — jeans, workers jackets, fur coats. Be prepared to dig.",addr:"Berenstraat 1",lat:52.37,lng:4.884},
+      {n:"Concrete Matter",t:"shop",d:"Vintage workwear + Japanese selvedge denim. Unisex. French workwear in cobalt blue. Feels like a chic hunting lodge.",addr:"Nieuwe Hoogstraat 8",lat:52.372,lng:4.9},
+      {n:"Marbles Vintage",t:"shop",d:"Retro for M+W. Leather coats, vintage denim, snakeskin bags. Three locations — Haarlemmerdijk 64 is the best.",addr:"Haarlemmerdijk 64",lat:52.382,lng:4.887},
+      {n:"Tamago",t:"shop",d:"Pre-loved designer. The Row, Loewe, Issey Miyake. On Spiegelgracht near the canal ring.",addr:"Spiegelgracht 9",lat:52.361,lng:4.884},
+      {n:"Calisto",t:"eat",d:"Candlelit trattoria, Jordaan. Daily handmade pasta, focaccia, aubergine croquettes. No reservations — queue with natural wine. 🌱 Good veggie pastas.",p:"€15–22",ord:"Pasta of the day.",src:"CN Traveller",veg:1,addr:"Haarlemmerdijk 61",lat:52.383,lng:4.888},
+      {n:"Café de Pels",t:"eat",d:"Kiazim's brown bar. Ossenworst with pickles. Great bitterballen. 🌱 Cheese board for veggies.",p:"€8–15",ord:"Ossenworst. Bitterballen. Beer.",src:"Kiazim",veg:1,addr:"Huidenstraat 25",lat:52.368,lng:4.886},
+    ]
+  },
+];
+
+const LUNCH=[
+  {id:"cafeams",n:"Café Restaurant Amsterdam",d:"City favourite since 1996. Massive former pump station near Westerpark. Full of light. Dutch-French: seafood, steak frites, good salads. Bright, buzzy. 10 min from Centraal — ideal after Noord. 🌱 Good salads + veg mains. Open lunch Wed.",p:"€25–45pp",ord:"Seafood, steak frites, beer.",src:"Dimitri / CN Traveller",veg:1,addr:"Watertorenplein 6",lat:52.3862,lng:4.8795},
+  {id:"bambino",n:"Bambino",d:"Kiazim's quiet pick. Small terrace, creative cooking. Vijzelgracht — next to hotel + Afura. 🌱 Good veg.",p:"€18–28",ord:"Daily menu.",src:"Kiazim",veg:1,addr:"Vijzelgracht 5h",lat:52.363,lng:4.89},
+  {id:"binnenvisser",n:"Café Binnenvisser",d:"Natural wines + seasonal sharing plates, Amsterdam West. Rustic, unfussy. 🌱 Most dishes veg-friendly. Kiazim warns: book ahead.",p:"€20–30",ord:"Sharing plates + natural wine.",src:"Kiazim / CN Traveller",veg:1,addr:"Bilderdijkstraat 36",lat:52.368,lng:4.872},
+  {id:"paindemie",n:"Paindemie",d:"Dimitri love. Entrance looks like a Japanese subway station. Le Big Mie: Big Mac on pain de mie with goat patties. Also chicken sandwich, prawn toast, crème brûlée sandwich. Upstairs: speakeasy cocktail bar.",p:"€14–22",ord:"Le Big Mie.",src:"Dimitri",addr:"Elandsgracht area",lat:52.369,lng:4.883},
+  {id:"nnea",n:"Nnea Pizza",d:"#9 in the world by 50 Top Pizza. Gambero Rosso rated. Neapolitan pies. Amsterdam West. 🌱 Great veggie pizzas. ⚠️ Check Wed lunch hours.",p:"€14–18",ord:"Margherita. Then another.",src:"CN Traveller",veg:1,addr:"Bilderdijkstraat 92",lat:52.368,lng:4.871},
+];
+
+const SNACKS=[
+  {id:"febo",n:"FEBO",d:"Vending machine snack wall — kroket from a hatch. 🌱 Kaassoufflé (fried cheese pastry) is veggie. One in Centraal Station — grab en route.",p:"€2–3",ord:"Kroket or kaassoufflé.",src:"Harriet",veg:1},
+  {id:"holtkamp",n:"Holtkamp",d:"Famous patisserie. Best bitterballen in the city (box of 10). Slagroom truffels — dark chocolate + whipped cream. 🌱 Truffels are veggie. Vijzelgracht 15 — near your hotel + Afura.",p:"€5–12",ord:"Slagroom truffels.",src:"Local institution",veg:1,addr:"Vijzelgracht 15",lat:52.3635,lng:4.8908},
+  {id:"namkee",n:"Nam Kee",d:"Chinese institution since 1981. Famous steamed oysters with black bean sauce (inspired a novel + film). Wonton soup, duck rice. Dimitri rec.",p:"€12–20",ord:"The steamed oysters.",src:"Dimitri",addr:"Zeedijk 111",lat:52.3755,lng:4.9},
+  {id:"haringzo",n:"Haring & Zo",d:"Herring stand behind the Royal Palace. Amsterdam way: sliced, onions, toothpick + Dutch flag. A rite of passage.",p:"€4–6",ord:"Herring with onions.",addr:"Near Dam Square",lat:52.373,lng:4.892},
+  {id:"tasteculture",n:"Taste of Culture",d:"Dimitri: best Peking duck he's had anywhere. Pancakes, plum sauce, spring onion. Usually packed — may wait or share table. Not cheap but worth it.",p:"€32 half duck",ord:"The Peking duck.",src:"Dimitri",lat:52.375,lng:4.898},
+  {id:"stroopwafel",n:"Fresh stroopwafels",d:"Warm caramel-filled waffles from any market stall. Eat hot when the caramel is gooey. 🌱",p:"€3–4",ord:"One. Then another.",veg:1},
+  {id:"afura",n:"Afura (shop)",d:"Near hotel. mfpen, Our Legacy, Camiel Fortgens, Japanese porcelain, Swedish fragrances. Tue–Fri 11am–7pm.",addr:"Vijzelgracht 13",lat:52.3633,lng:4.8905,t:"shop"},
+];
+
+/* ── UI ── */
+const TC={do:{l:"DO THIS",bg:"#000",fg:"#fff"},walk:{l:"EXPLORE",bg:"#E4E0D8",fg:"#555"},eat:{l:"EAT",bg:"#FEF3C7",fg:"#92400E"},shop:{l:"SHOP",bg:"#DBEAFE",fg:"#1E40AF"},lunch:{l:"LUNCH",bg:"#D1FAE5",fg:"#065F46"},info:{l:"NOTE",bg:"#FEE2E2",fg:"#991B1B"}};
+
+function C({p,col,ex,onT}){
+  const tc=TC[p.t||"eat"]||TC.eat;
+  if(p.closed&&!ex) return <div key={p.n} style={{opacity:0.4,background:"#fff",border:"1px solid #E8E2D8",borderRadius:10,marginBottom:7,padding:"11px 13px"}}>
+    <div style={{display:"flex",alignItems:"center",gap:6}}>
+      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,fontWeight:700,background:"#FEE2E2",color:"#991B1B",padding:"2px 6px",borderRadius:3}}>CLOSED WED</span>
+      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:700,textDecoration:"line-through"}}>{p.n}</span>
+    </div>
+  </div>;
+  return <div style={{background:"#fff",border:ex?`2px solid ${col}`:"1px solid #E8E2D8",borderRadius:10,marginBottom:7,overflow:"hidden",transition:"all 0.15s"}}>
+    <button onClick={onT} style={{display:"block",width:"100%",textAlign:"left",background:"none",border:"none",cursor:"pointer",padding:"11px 13px 9px"}}>
+      <div style={{display:"flex",alignItems:"flex-start",gap:6}}>
+        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,fontWeight:700,letterSpacing:"0.03em",background:tc.bg,color:tc.fg,padding:"2px 6px",borderRadius:3,flexShrink:0,marginTop:3}}>{tc.l}</span>
+        <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:4}}>
+          <h3 style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12.5,fontWeight:700,margin:0}}>{p.n}</h3>
+          {p.veg?<span style={{fontSize:10}}>🌱</span>:null}
+        </div></div>
+        <div style={{display:"flex",alignItems:"center",gap:5,flexShrink:0}}>
+          {p.p&&<span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"#aaa"}}>{p.p}</span>}
+          <span style={{fontSize:11,color:"#ccc",transform:ex?"rotate(180deg)":"none",transition:"transform 0.15s",display:"inline-block"}}>▾</span>
+        </div>
+      </div>
+    </button>
+    {ex&&<div style={{padding:"0 13px 11px",borderTop:"1px solid #F0EDE8"}}>
+      <p style={{fontSize:12,lineHeight:1.6,color:"#444",margin:"8px 0 0"}}>{p.d}</p>
+      {p.ord&&<div style={{marginTop:7,padding:"5px 9px",background:p.t==="shop"?"#EFF6FF":"#FFFBEB",borderRadius:5,borderLeft:`3px solid ${col}`}}>
+        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,fontWeight:700,color:col}}>{p.t==="shop"?"LOOK FOR":"ORDER"} → </span>
+        <span style={{fontSize:12,color:"#555"}}>{p.ord}</span>
+      </div>}
+      <div style={{display:"flex",gap:4,marginTop:6,flexWrap:"wrap"}}>
+        {p.time&&<span style={ts}>⏱ {p.time}</span>}
+        {p.addr&&<span style={ts}>📍 {p.addr}</span>}
+        {p.src&&<span style={{...ts,background:"#F3EFF8",color:"#7B5EA7"}}>via {p.src}</span>}
+      </div>
+      {p.link&&<a href={p.link} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:6,fontSize:11,fontWeight:600,color:col,textDecoration:"none",borderBottom:`1px solid ${col}33`}}>Website →</a>}
+    </div>}
+  </div>;
+}
+const ts={fontFamily:"'JetBrains Mono',monospace",fontSize:9.5,fontWeight:500,color:"#888",background:"#F5F3EE",padding:"2px 6px",borderRadius:8};
+
+function buildMap(pts){
+  const g=pts.filter(p=>p.lat&&p.lng);
+  if(g.length<2) return null;
+  const o=`${g[0].lat},${g[0].lng}`;
+  const d=`${g[g.length-1].lat},${g[g.length-1].lng}`;
+  const w=g.slice(1,-1).map(p=>`${p.lat},${p.lng}`).join("|");
+  return `https://www.google.com/maps/dir/?api=1&origin=${o}&destination=${d}&waypoints=${w}&travelmode=transit`;
+}
+
+function App(){
+  const[step,setStep]=useState("start");
+  const[bk,setBk]=useState(null);
+  const[zone,setZone]=useState(null);
+  const[ex,setEx]=useState(null);
+  const[saved,setSaved]=useState([]);
+  const z=ZONES.find(x=>x.id===zone);
+  const col=z?.c1||"#000";
+  const tog=id=>setEx(ex===id?null:id);
+  const save=p=>{const k=p.n;setSaved(s=>s.find(x=>x.n===k)?s.filter(x=>x.n!==k):[...s,p]);};
+  const isSaved=p=>saved.find(x=>x.n===p.n);
+  const url=buildMap(saved);
+
+  return <div style={{fontFamily:"'DM Sans',sans-serif",background:"#FAFAF7",minHeight:"100vh",color:"#1A1A1A",maxWidth:480,margin:"0 auto"}}>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+    {/* HEADER */}
+    <div style={{position:"sticky",top:0,zIndex:100,background:"linear-gradient(135deg,#1A1A1A 0%,#2D2D2D 100%)",color:"#fff",padding:"11px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div>
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,fontWeight:600,letterSpacing:"0.08em",color:"#E8512F"}}>WED 12 MAR · 🌧 · EUROSTAR 18:25</div>
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:13,fontWeight:700,marginTop:1}}>AMSTERDAM DAY 2</div>
+      </div>
+      <div style={{display:"flex",gap:5,alignItems:"center"}}>
+        {saved.length>0&&<span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9.5,color:"#E8512F",fontWeight:700,background:"rgba(232,81,47,0.15)",padding:"2px 7px",borderRadius:10}}>{saved.length} ♡</span>}
+        {step!=="start"&&<button onClick={()=>{
+          if(step==="wild"){setStep("detail");setEx(null);}
+          else if(step==="detail"){setStep("zone");setZone(null);setEx(null);}
+          else if(step==="zone"){setStep("bk");setBk(null);}
+          else if(step==="bk") setStep("start");
+        }} style={{background:"rgba(255,255,255,0.08)",border:"none",color:"#fff",fontFamily:"'JetBrains Mono',monospace",fontSize:9.5,padding:"4px 9px",borderRadius:4,cursor:"pointer"}}>←</button>}
+      </div>
+    </div>
+
+    <div style={{padding:"0 16px 40px"}}>
+
+    {/* START */}
+    {step==="start"&&<>
+      <div style={{padding:"28px 0 20px"}}>
+        <div style={{display:"inline-block",background:"#E8512F",color:"#fff",fontFamily:"'JetBrains Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.06em",padding:"3px 10px",borderRadius:4,marginBottom:12}}>4 OF YOU · 2 VEGGIE · BACK BY 4PM</div>
+        <h1 style={{fontFamily:"'JetBrains Mono',monospace",fontSize:28,fontWeight:700,margin:0,lineHeight:1.15,background:"linear-gradient(135deg,#1A1A1A,#444)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent"}}>Three<br/>choices.</h1>
+        <p style={{fontSize:13.5,lineHeight:1.6,color:"#666",margin:"14px 0 0"}}>Breakfast → the big thing → everything else unfolds. Tap ♡ to save places and build a Google Maps route at the end.</p>
+      </div>
+      <div style={{display:"flex",gap:4,marginBottom:18}}>
+        {[["①","Breakfast","#E8512F"],["②","Big Thing","#1D6FE0"],["③","Eat + Shop","#1B7A4A"]].map(([n,l,c],i)=>(
+          <div key={i} style={{flex:1,background:c,color:"#fff",padding:"10px 4px",borderRadius:8,textAlign:"center"}}>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:18,fontWeight:700}}>{n}</div>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,fontWeight:600,marginTop:1,opacity:0.7}}>{l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{background:"#F0EDE6",borderRadius:8,padding:"11px 13px",marginBottom:10,fontSize:12,lineHeight:1.5,color:"#555"}}>
+        <strong>🌱 Veggie:</strong> Places with 🌱 have proper vegetarian options throughout.
+      </div>
+      <div style={{background:"#F0EDE6",borderRadius:8,padding:"11px 13px",marginBottom:10,fontSize:12,lineHeight:1.5,color:"#555"}}>
+        <strong>🛍 Near hotel:</strong> Afura (Vijzelgracht 13, 11am–7pm), Holtkamp patisserie (Vijzelgracht 15), American Vintage (Van Baerlestraat 18). All walkable before you head out.
+      </div>
+      <div style={{background:"#F0EDE6",borderRadius:8,padding:"11px 13px",marginBottom:16,fontSize:12,lineHeight:1.5,color:"#555"}}>
+        <strong>🕐 Timing:</strong> Hotel ~4pm → tram to Centraal (15 min) → Eurostar check-in 5:25pm → departs 6:25pm. Comfortable.
+      </div>
+      <button onClick={()=>setStep("bk")} style={{display:"block",width:"100%",background:"linear-gradient(135deg,#1A1A1A,#333)",color:"#fff",fontFamily:"'JetBrains Mono',monospace",fontSize:14,fontWeight:700,padding:"15px",border:"none",borderRadius:8,cursor:"pointer"}}>LET'S GO →</button>
+    </>}
+
+    {/* BREAKFAST */}
+    {step==="bk"&&<>
+      <div style={{padding:"16px 0 10px"}}>
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.08em",color:"#E8512F"}}>① BREAKFAST</div>
+        <h2 style={{fontFamily:"'JetBrains Mono',monospace",fontSize:18,fontWeight:700,margin:"3px 0 0"}}>Where first</h2>
+        <p style={{fontSize:12,lineHeight:1.5,color:"#888",margin:"5px 0 0"}}>All have 🌱 options. "Near" shows which direction each pulls you.</p>
+      </div>
+      {BK.map(b=>(
+        <div key={b.id} onClick={()=>setBk(b.id)} style={{background:bk===b.id?"linear-gradient(135deg,#1A1A1A,#2D2D2D)":"#fff",color:bk===b.id?"#fff":"#1A1A1A",border:bk===b.id?"1px solid #333":"1px solid #E5E0D8",borderRadius:9,marginBottom:7,padding:"11px 13px",cursor:"pointer",transition:"all 0.12s"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div><h3 style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12.5,fontWeight:700,margin:0}}>{b.n} 🌱</h3>
+            <p style={{fontSize:11.5,margin:"2px 0 0",color:bk===b.id?"rgba(255,255,255,0.5)":"#999",fontStyle:"italic"}}>{b.v}</p></div>
+            <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:bk===b.id?"rgba(255,255,255,0.3)":"#bbb"}}>{b.p}</span>
+          </div>
+          <p style={{fontSize:11.5,lineHeight:1.5,margin:"5px 0 0",color:bk===b.id?"rgba(255,255,255,0.75)":"#666"}}>{b.d}</p>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:5}}>
+            <span style={{fontSize:10.5,color:"#E8512F",fontWeight:600}}>→ {b.near}</span>
+            <span style={{fontSize:10,color:bk===b.id?"rgba(255,255,255,0.4)":"#bbb"}}>{b.src}</span>
+          </div>
+        </div>
+      ))}
+      {bk&&<button onClick={()=>{setStep("zone");const sel=BK.find(b=>b.id===bk);if(sel)save({n:sel.n,lat:sel.lat,lng:sel.lng});}} style={{display:"block",width:"100%",background:"linear-gradient(135deg,#1A1A1A,#333)",color:"#fff",fontFamily:"'JetBrains Mono',monospace",fontSize:12,fontWeight:700,padding:"14px",border:"none",borderRadius:8,cursor:"pointer",marginTop:10}}>NEXT → THE BIG THING</button>}
+    </>}
+
+    {/* ZONE PICK */}
+    {step==="zone"&&<>
+      <div style={{padding:"16px 0 10px"}}>
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.08em",color:"#1D6FE0"}}>② THE BIG THING</div>
+        <h2 style={{fontFamily:"'JetBrains Mono',monospace",fontSize:18,fontWeight:700,margin:"3px 0 0"}}>Pick your zone</h2>
+        <p style={{fontSize:12,lineHeight:1.5,color:"#888",margin:"5px 0 0"}}>Each has its own orbit of food, shops, walks. Includes en-route shopping.</p>
+      </div>
+      {ZONES.map(r=>(
+        <button key={r.id} onClick={()=>{setZone(r.id);setStep("detail");}} style={{display:"block",width:"100%",textAlign:"left",background:"#fff",border:`2px solid ${r.c1}`,borderRadius:10,padding:0,marginBottom:10,cursor:"pointer",overflow:"hidden"}}>
+          <div style={{background:`linear-gradient(135deg,${r.c1},${r.c1}dd)`,padding:"11px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{display:"flex",alignItems:"center",gap:7}}><span style={{fontSize:17}}>{r.em}</span><span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:13.5,fontWeight:700,color:"#fff"}}>{r.n}</span></div>
+            <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.15)",padding:"2px 7px",borderRadius:10}}>{r.t}</span>
+          </div>
+          <div style={{padding:"10px 14px 12px",background:`linear-gradient(180deg,${r.c2},#fff)`}}>
+            <p style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10.5,fontWeight:700,color:r.c1,margin:"0 0 4px"}}>{r.hl}</p>
+            <p style={{fontSize:12,lineHeight:1.5,color:"#666",margin:"0 0 7px"}}>{r.desc.slice(0,140)}...</p>
+            <div style={{fontSize:10.5,color:"#888",fontStyle:"italic"}}>Best for: {r.best}</div>
+          </div>
+        </button>
+      ))}
+    </>}
+
+    {/* ZONE DETAIL */}
+    {step==="detail"&&z&&<>
+      <div style={{margin:"0 -16px",background:`linear-gradient(135deg,${z.c1},${z.c1}cc)`,padding:"16px 16px 14px",color:"#fff"}}>
+        <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:5}}><span style={{fontSize:20}}>{z.em}</span><h2 style={{fontFamily:"'JetBrains Mono',monospace",fontSize:17,fontWeight:700,margin:0}}>{z.n}</h2></div>
+        <p style={{fontSize:12,lineHeight:1.55,margin:0,color:"rgba(255,255,255,0.85)"}}>{z.desc}</p>
+      </div>
+      <div style={{margin:"0 -16px",padding:"8px 16px",background:z.c2,borderBottom:"1px solid #E8E2D8"}}>
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,fontWeight:700,letterSpacing:"0.06em",color:z.c1}}>🚋 THERE</div>
+        <p style={{fontSize:11,lineHeight:1.4,color:"#555",margin:"2px 0 0"}}>{z.how}</p>
+      </div>
+      <div style={{margin:"0 -16px",padding:"6px 16px",background:"#FFFDF5",borderBottom:"1px solid #E8E2D8",marginBottom:12}}>
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8,fontWeight:700,letterSpacing:"0.06em",color:"#999"}}>🕐 BACK</div>
+        <p style={{fontSize:10.5,lineHeight:1.4,color:"#888",margin:"2px 0 0"}}>{z.back}</p>
+      </div>
+      <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,fontWeight:700,letterSpacing:"0.06em",color:"#999",marginBottom:7}}>IN THIS ORBIT · tap ♡ to save</div>
+      {z.stops.map((s,i)=><div key={i} style={{position:"relative"}}>
+        <C p={s} col={col} ex={ex===`s${i}`} onT={()=>tog(`s${i}`)}/>
+        {!s.closed&&<button onClick={e=>{e.stopPropagation();save(s);}} style={{position:"absolute",top:9,right:9,background:"none",border:"none",cursor:"pointer",fontSize:14,padding:1,opacity:0.7}}>{isSaved(s)?"❤️":"🤍"}</button>}
+      </div>)}
+      <button onClick={()=>{setStep("wild");setEx(null);}} style={{display:"block",width:"100%",background:"linear-gradient(135deg,#1A1A1A,#333)",color:"#fff",fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:700,padding:"13px",border:"none",borderRadius:8,cursor:"pointer",marginTop:10}}>MORE LUNCH + SNACKS →</button>
+    </>}
+
+    {/* WILDCARDS */}
+    {step==="wild"&&<>
+      <div style={{padding:"14px 0 10px"}}>
+        <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,fontWeight:700,letterSpacing:"0.06em",color:"#1B7A4A"}}>③ ANYWHERE</div>
+        <h2 style={{fontFamily:"'JetBrains Mono',monospace",fontSize:17,fontWeight:700,margin:"3px 0 0"}}>Lunch & snacks</h2>
+        <p style={{fontSize:12,lineHeight:1.5,color:"#888",margin:"5px 0 0"}}>Work with any zone. Tap ♡ to add to your route.</p>
+      </div>
+      <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,fontWeight:700,letterSpacing:"0.05em",color:"#1B7A4A",marginBottom:6}}>LATE LUNCH — SIT DOWN</div>
+      {LUNCH.map(l=><div key={l.id} style={{position:"relative"}}><C p={{...l,t:"lunch"}} col="#1B7A4A" ex={ex===l.id} onT={()=>tog(l.id)}/><button onClick={()=>save(l)} style={{position:"absolute",top:9,right:9,background:"none",border:"none",cursor:"pointer",fontSize:14,padding:1,opacity:0.7}}>{isSaved(l)?"❤️":"🤍"}</button></div>)}
+      <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:8.5,fontWeight:700,letterSpacing:"0.05em",color:"#B45309",marginTop:14,marginBottom:6}}>SNACKS + SHOPS — ONE THING, KEEP MOVING</div>
+      {SNACKS.map(s=><div key={s.id} style={{position:"relative"}}><C p={{...s,t:s.t||"eat"}} col="#B45309" ex={ex===s.id} onT={()=>tog(s.id)}/><button onClick={()=>save(s)} style={{position:"absolute",top:9,right:9,background:"none",border:"none",cursor:"pointer",fontSize:14,padding:1,opacity:0.7}}>{isSaved(s)?"❤️":"🤍"}</button></div>)}
+
+      {/* SAVED BAR */}
+      {saved.length>0&&<div style={{position:"sticky",bottom:0,background:"linear-gradient(135deg,#1A1A1A,#2D2D2D)",margin:"14px -16px 0",padding:"12px 16px",borderRadius:"10px 10px 0 0"}}>
+        <div style={{color:"#fff",fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,marginBottom:5}}>{saved.length} PLACES SAVED</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:3,marginBottom:8}}>
+          {saved.map((s,i)=><span key={i} style={{fontSize:9,color:"rgba(255,255,255,0.6)",background:"rgba(255,255,255,0.08)",padding:"2px 6px",borderRadius:8}}>{s.n}</span>)}
+        </div>
+        {url?<a href={url} target="_blank" rel="noopener noreferrer" style={{display:"block",width:"100%",background:"linear-gradient(135deg,#1D6FE0,#3B82F6)",color:"#fff",fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:700,padding:"11px",borderRadius:8,textAlign:"center",textDecoration:"none"}}>OPEN ROUTE IN GOOGLE MAPS →</a>
+        :<p style={{fontSize:10,color:"rgba(255,255,255,0.4)",margin:0}}>Save 2+ places with locations for a route</p>}
+      </div>}
+
+      <button onClick={()=>{setStep("detail");setEx(null);}} style={{display:"block",width:"100%",background:"#F0EDE6",color:"#555",fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,padding:"11px",border:"none",borderRadius:8,cursor:"pointer",marginTop:saved.length>0?70:14}}>← BACK TO {z?.n?.toUpperCase()}</button>
+    </>}
+
+    </div>
+  </div>;
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
